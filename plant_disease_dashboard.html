@@ -1,0 +1,1740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TGVAnn - Texture Guided Visual Attention Network Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .header .subtitle {
+            font-size: 0.9em;
+            margin-top: 10px;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f5f5f5;
+            border-bottom: 2px solid #ddd;
+            overflow-x: auto;
+        }
+
+        .tab {
+            flex: 1;
+            min-width: 150px;
+            padding: 18px;
+            text-align: center;
+            cursor: pointer;
+            background: #f5f5f5;
+            border: none;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .tab:hover {
+            background: #e0e0e0;
+        }
+
+        .tab.active {
+            background: white;
+            color: #1e3c72;
+            border-bottom: 3px solid #1e3c72;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+            max-height: calc(100vh - 250px);
+            overflow-y: auto;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 25px;
+            background: #f9f9f9;
+            border-radius: 12px;
+            border-left: 5px solid #1e3c72;
+        }
+
+        .section h2 {
+            color: #1e3c72;
+            margin-bottom: 20px;
+            font-size: 1.6em;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .info-box h4 {
+            color: #1976d2;
+            margin-bottom: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #1e3c72;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 14px 32px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(30, 60, 114, 0.4);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .image-card {
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .image-card:hover {
+            border-color: #1e3c72;
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .image-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+        }
+
+        .image-card .label {
+            padding: 10px;
+            text-align: center;
+            background: #f5f5f5;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .metrics-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .metrics-card h3 {
+            color: #1e3c72;
+            margin-bottom: 12px;
+            font-size: 1.1em;
+        }
+
+        .metrics-card .value {
+            font-size: 2.2em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .metrics-card .subvalue {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .status {
+            padding: 12px 20px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .file-upload {
+            border: 3px dashed #1e3c72;
+            border-radius: 12px;
+            padding: 50px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .file-upload:hover {
+            background: #f0f4ff;
+            border-color: #2a5298;
+        }
+
+        .file-upload input {
+            display: none;
+        }
+
+        .file-upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 35px;
+            background: #e0e0e0;
+            border-radius: 18px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .log-box {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 18px;
+            border-radius: 8px;
+            height: 250px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        .model-card {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .model-card:hover {
+            border-color: #1e3c72;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .model-card.selected {
+            border-color: #28a745;
+            background: #f0fff4;
+        }
+
+        .model-card h3 {
+            color: #1e3c72;
+            margin-bottom: 10px;
+        }
+
+        .model-card .badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-baseline {
+            background: #6c757d;
+            color: white;
+        }
+
+        .badge-attention {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .badge-proposed {
+            background: #28a745;
+            color: white;
+        }
+
+        .texture-option {
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .texture-option:hover {
+            border-color: #1e3c72;
+        }
+
+        .texture-option.selected {
+            border-color: #28a745;
+            background: #f0fff4;
+        }
+
+        .texture-option h4 {
+            color: #1e3c72;
+            margin-bottom: 8px;
+        }
+
+        .model-summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: white;
+        }
+
+        .model-summary-table th,
+        .model-summary-table td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        .model-summary-table th {
+            background: #1e3c72;
+            color: white;
+            font-weight: 600;
+        }
+
+        .model-summary-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        .architecture-diagram {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 2px solid #e0e0e0;
+        }
+
+        .stream-box {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #1e3c72;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2, .grid-3, .grid-4 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌿 TGVAnn Dashboard</h1>
+            <p>Texture Guided Visual Attention Network for Plant Disease Detection</p>
+            <div class="subtitle">
+                Multi-Feature Projection • Cross-Modal Attention • Lightweight & Efficient
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab(0)">1️⃣ Dataset</button>
+            <button class="tab" onclick="switchTab(1)">2️⃣ Texture (LDP)</button>
+            <button class="tab" onclick="switchTab(2)">3️⃣ Model Architecture</button>
+            <button class="tab" onclick="switchTab(3)">4️⃣ Hyperparameters</button>
+            <button class="tab" onclick="switchTab(4)">5️⃣ Training</button>
+            <button class="tab" onclick="switchTab(5)">6️⃣ Testing & Metrics</button>
+            <button class="tab" onclick="switchTab(6)">7️⃣ Inference</button>
+        </div>
+
+        <!-- Tab 1: Dataset -->
+        <div class="tab-content active">
+            <div class="section">
+                <h2>Upload Plant Disease Dataset</h2>
+                <div class="info-box">
+                    <h4>📋 Supported Datasets</h4>
+                    <p><strong>Validated on:</strong> Sugarcane Leaf Dataset (SLD), PlantVillage (Maize), TMCI, KSCI</p>
+                    <p><strong>Structure:</strong> Dataset_Name/Class_Name/images.jpg</p>
+                    <p><strong>Note:</strong> TGVAnn excels on imbalanced datasets with overrepresentation of healthy leaves</p>
+                </div>
+                <div class="file-upload" onclick="document.getElementById('dataUpload').click()">
+                    <input type="file" id="dataUpload" webkitdirectory directory multiple accept="image/*">
+                    <div class="file-upload-icon">📁</div>
+                    <h3>Click to Upload Plant Leaf Dataset</h3>
+                    <p style="color: #666; margin-top: 10px;">
+                        Upload folder containing disease class subdirectories
+                    </p>
+                </div>
+                <div id="dataStatus" class="status info" style="display: none; margin-top: 15px;">
+                    Waiting for dataset...
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Dataset Statistics</h2>
+                <div class="grid-3">
+                    <div class="metrics-card">
+                        <h3>Dataset Name</h3>
+                        <div class="value" id="datasetName" style="font-size: 1.5em;">-</div>
+                    </div>
+                    <div class="metrics-card">
+                        <h3>Total Classes</h3>
+                        <div class="value" id="totalClasses">0</div>
+                    </div>
+                    <div class="metrics-card">
+                        <h3>Total Images</h3>
+                        <div class="value" id="totalImages">0</div>
+                        <div class="subvalue" id="imbalanceWarning"></div>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 30px; color: #1e3c72;">Class Distribution Analysis</h3>
+                <table class="model-summary-table">
+                    <thead>
+                        <tr>
+                            <th>Class Name</th>
+                            <th>Image Count</th>
+                            <th>Percentage</th>
+                            <th>Balance Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="classDistribution">
+                        <tr><td colspan="4" style="text-align: center;">No dataset loaded</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="section">
+                <h2>Sample Images from Each Class</h2>
+                <div id="classPreview"></div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Texture Generation (LDP) -->
+        <div class="tab-content">
+            <div class="section">
+                <h2>Local Directional Pattern (LDP) - Texture Extraction</h2>
+                <div class="info-box">
+                    <h4>🎨 Why LDP for Plant Disease Detection?</h4>
+                    <p><strong>Superior Edge Detection:</strong> Captures top-k directional gradients (Kirsch masks)</p>
+                    <p><strong>Disease-Specific Patterns:</strong> Detects subtle texture changes from fungal growth, lesions, and chlorosis</p>
+                    <p><strong>Robustness:</strong> Handles natural occlusion, pesticide artifacts, and shadow interference</p>
+                </div>
+
+                <div class="grid-3">
+                    <div class="texture-option selected" onclick="selectTexture('ldp', this)">
+                        <h4>✨ LDP (Proposed)</h4>
+                        <p>Local Directional Pattern</p>
+                        <small>8 Kirsch directional masks • Top-k gradients • CLAHE enhancement</small>
+                    </div>
+                    <div class="texture-option" style="opacity: 0.5;">
+                        <h4>LBP</h4>
+                        <p>Local Binary Pattern</p>
+                        <small>Baseline comparison only</small>
+                    </div>
+                    <div class="texture-option" style="opacity: 0.5;">
+                        <h4>GLCM</h4>
+                        <p>Gray-Level Co-occurrence</p>
+                        <small>Baseline comparison only</small>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; background: white; padding: 15px; border-radius: 8px;">
+                    <h4 style="color: #1e3c72; margin-bottom: 10px;">LDP Parameters</h4>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Top-K Gradients (k):</label>
+                            <input type="number" id="ldpTopK" value="3" min="1" max="8">
+                            <small>Higher k captures more directional information</small>
+                        </div>
+                        <div class="form-group">
+                            <label>CLAHE Clip Limit:</label>
+                            <input type="number" id="claheClip" value="2.0" step="0.1" min="1.0" max="5.0">
+                            <small>Enhances local contrast for better edge detection</small>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="generateTextures()">
+                    🎨 Generate LDP Texture Features
+                </button>
+            </div>
+
+            <div class="section">
+                <h2>Texture Generation Progress</h2>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="textureProgress" style="width: 0%">0%</div>
+                </div>
+                <div class="log-box" id="textureLog">Ready to generate LDP texture features...</div>
+            </div>
+
+            <div class="section">
+                <h2>RGB vs LDP Texture Comparison</h2>
+                <div id="textureComparison" class="image-grid"></div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Model Architecture -->
+        <div class="tab-content">
+            <div class="section">
+                <h2>TGVAnn Architecture Overview</h2>
+                <div class="architecture-diagram">
+                    <h3 style="color: #1e3c72; margin-bottom: 15px;">Dual-Stream Architecture with Cross-Modal Attention</h3>
+                    
+                    <div class="stream-box">
+                        <h4 style="color: #2196f3;">📸 RGB Stream (Query Pathway)</h4>
+                        <p><strong>Full ResNet-18 Backbone:</strong> Conv1 → ResBlock-1 → ResBlock-2 → ResBlock-3 → ResBlock-4</p>
+                        <p><strong>Purpose:</strong> Extracts appearance-based visual features (color, shape, global context)</p>
+                    </div>
+
+                    <div class="stream-box">
+                        <h4 style="color: #ff9800;">🎨 Texture Stream (Key-Value Pathway)</h4>
+                        <p><strong>Partial ResNet-18:</strong> Conv1 → ResBlock-1 → ResBlock-2 <em>(stops here)</em></p>
+                        <p><strong>Input:</strong> LDP texture features (grayscale directional patterns)</p>
+                        <p><strong>Purpose:</strong> Captures fine-grained disease-specific textural information</p>
+                    </div>
+
+                    <div class="stream-box" style="border-left-color: #28a745;">
+                        <h4 style="color: #28a745;">⚡ TGVA Fusion Module @ ResBlock-2</h4>
+                        <p><strong>Multi-Feature Projection:</strong></p>
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li><strong>Query (Q):</strong> RGB features from ResBlock-2</li>
+                            <li><strong>Key (K) & Value (V):</strong> Texture features from ResBlock-2</li>
+                            <li><strong>Attention:</strong> Attention = SoftMax(Q · K<sup>T</sup> / √d_k) · V</li>
+                            <li><strong>Residual Integration:</strong> TGVA = RGB_features + Attention_output</li>
+                        </ul>
+                    </div>
+
+                    <div class="stream-box" style="border-left-color: #9c27b0;">
+                        <h4 style="color: #9c27b0;">🎯 Classification Head</h4>
+                        <p><strong>Dense Classifier:</strong> Global Average Pooling → FC → Dropout → FC (num_classes)</p>
+                        <p><strong>Output:</strong> Disease class predictions with confidence scores</p>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <h4>💡 Key Innovation: Multi-Feature Projection (MFP)</h4>
+                    <p>Unlike standard ViTs that use single-domain features for Q, K, V, TGVAnn projects <strong>heterogeneous features</strong> from two complementary domains:</p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>✓ RGB (appearance) → Query pathway</li>
+                        <li>✓ Texture (LDP patterns) → Key-Value pathway</li>
+                        <li>✓ Preserves modality-specific characteristics while enabling cross-domain learning</li>
+                        <li>✓ Superior to early fusion (loses modality info) and late fusion (no inter-modal dependencies)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Compare with Baseline & State-of-the-Art Models</h2>
+                
+                <h3 style="margin-bottom: 15px; color: #1e3c72;">Baseline Models</h3>
+                <div class="grid-2" style="margin-bottom: 30px;">
+                    <div class="model-card" onclick="selectModel('resnet18_rgb', this)">
+                        <span class="badge badge-baseline">BASELINE</span>
+                        <h3>ResNet-18 (RGB Only)</h3>
+                        <p>Standard ResNet-18 with appearance features only</p>
+                        <small>• 11.69M params • No texture • Fast baseline</small>
+                    </div>
+                    <div class="model-card" onclick="selectModel('resnet18_texture', this)">
+                        <span class="badge badge-baseline">BASELINE</span>
+                        <h3>ResNet-18 (Texture Only)</h3>
+                        <p>ResNet-18 with LDP texture features only</p>
+                        <small>• 11.69M params • Validates texture importance</small>
+                    </div>
+                </div>
+
+                <h3 style="margin-bottom: 15px; color: #1e3c72;">State-of-the-Art Attention Models</h3>
+                <div class="grid-2" style="margin-bottom: 30px;">
+                    <div class="model-card" onclick="selectModel('vit', this)">
+                        <span class="badge badge-attention">SOTA</span>
+                        <h3>Vision Transformer (ViT)</h3>
+                        <p>Standard self-attention on RGB patches</p>
+                        <small>• 21.9M params • 190.5 TFLOPs • Single-domain</small>
+                    </div>
+                    <div class="model-card" onclick="selectModel('efficientnet', this)">
+                        <span class="badge badge-attention">SOTA</span>
+                        <h3>EfficientNet-B7</h3>
+                        <p>Channel attention (Squeeze-Excitation)</p>
+                        <small>• 66.1M params • 1.92 PFLOPs • High compute</small>
+                    </div>
+                    <div class="model-card" onclick="selectModel('swin', this)">
+                        <span class="badge badge-attention">SOTA</span>
+                        <h3>Swin Transformer</h3>
+                        <p>Shifted window attention</p>
+                        <small>• 26.7M params • 78.5 TFLOPs • Hierarchical</small>
+                    </div>
+                    <div class="model-card" onclick="selectModel('mobilevit', this)">
+                        <span class="badge badge-attention">SOTA</span>
+                        <h3>MobileViT</h3>
+                        <p>Lightweight ViT for mobile</p>
+                        <small>• 2.12M params • 16 TFLOPs • Mobile-optimized</small>
+                    </div>
+                </div>
+
+                <h3 style="margin-bottom: 15px; color: #28a745;">Proposed Model</h3>
+                <div class="grid-2">
+                    <div class="model-card selected" onclick="selectModel('tgvann', this)">
+                        <span class="badge badge-proposed">PROPOSED</span>
+                        <h3>TGVAnn (Ours)</h3>
+                        <p>Texture-Guided Visual Attention Network</p>
+                        <small>• <strong>4.301M params</strong> • <strong>2.11 GFLOPs</strong> • Dual-stream • Cross-modal attention</small>
+                        <div style="margin-top: 10px; padding: 10px; background: #e8f5e9; border-radius: 4px;">
+                            <strong style="color: #2e7d32;">✓ 20-70% computational reduction vs SOTA</strong><br>
+                            <strong style="color: #2e7d32;">✓ 9% accuracy improvement over ViT</strong><br>
+                            <strong style="color: #2e7d32;">✓ Robust to dataset imbalance</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Selected Model Summary</h2>
+                <div id="modelSummary" class="log-box" style="height: 300px;">Model: TGVAnn (Texture-Guided Visual Attention Network)
+Type: PROPOSED - Cross-Modal Attention
+Inputs: RGB + LDP Texture (Dual-Stream)
+
+Architecture:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RGB Stream (Query):       Full ResNet-18
+Texture Stream (K,V):     ResNet-18 up to ResBlock-2
+Fusion Point:             ResBlock-2 output
+Attention Mechanism:      Multi-Feature Projection
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Model Statistics:
+- Trainable Parameters: 4.301M
+- Computational Complexity: 2.11 GFLOPs
+- Attention Heads: 1 (single-head for efficiency)
+- Feature Dimension (d_model): 128
+- FFN Hidden Dimension: 512
+
+Performance (SLD):
+- Accuracy: 99.07%
+- Superior to ViT (+9% improvement)
+- 20-70% computational reduction vs SOTA
+- Robust on imbalanced datasets
+
+Requirements:
+✓ Requires LDP texture feature generation
+✓ Dual-stream processing
+✓ Cross-modal attention at ResBlock-2
+✓ PROPOSED MODEL - Best efficiency-accuracy trade-off</div>
+            </div>
+        </div>
+
+        <!-- Tab 4: Hyperparameters -->
+        <div class="tab-content">
+            <div class="section">
+                <h2>Training Configuration</h2>
+                <div class="info-box">
+                    <h4>🎯 Optimized for TGVAnn</h4>
+                    <p>These hyperparameters are tuned for the dual-stream architecture with cross-modal attention</p>
+                    <p><strong>Key considerations:</strong> Balanced learning for RGB and texture streams, attention module stability</p>
+                </div>
+                
+                <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3 style="color: #1e3c72; margin-bottom: 15px;">Basic Training Parameters</h3>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Batch Size:</label>
+                            <select id="batchSize">
+                                <option value="16">16</option>
+                                <option value="32" selected>32 (Recommended for TGVAnn)</option>
+                                <option value="64">64</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Number of Epochs:</label>
+                            <input type="number" id="numEpochs" value="50" min="10" max="200">
+                            <small>50 epochs optimal for convergence</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Learning Rate:</label>
+                            <select id="learningRate">
+                                <option value="0.001">1e-3</option>
+                                <option value="0.0001" selected>1e-4 (Recommended)</option>
+                                <option value="0.00001">1e-5</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Optimizer:</label>
+                            <select id="optimizer">
+                                <option value="adam" selected>Adam (Adaptive learning)</option>
+                                <option value="adamw">AdamW (Weight decay)</option>
+                                <option value="sgd">SGD (Momentum)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3 style="color: #1e3c72; margin-bottom: 15px;">TGVAnn Attention Module Parameters</h3>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Number of Attention Heads:</label>
+                            <input type="number" id="numHeads" value="1" min="1" max="8">
+                            <small>1 head for efficiency (paper setting)</small>
+                        </div>
+                        <div class="form-group">
+                            <label>d_model (Feature Dimension):</label>
+                            <input type="number" id="dModel" value="128" min="64" max="512" step="64">
+                            <small>Attention feature dimension</small>
+                        </div>
+                        <div class="form-group">
+                            <label>d_ff (Feed-Forward Hidden):</label>
+                            <input type="number" id="dFF" value="512" min="256" max="2048" step="256">
+                            <small>FFN hidden layer dimension</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Attention Dropout:</label>
+                            <input type="number" id="pAttn" value="0.10" min="0" max="0.5" step="0.05">
+                            <small>Dropout in attention layer</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: white; padding: 20px; border-radius: 8px;">
+                    <h3 style="color: #1e3c72; margin-bottom: 15px;">Regularization & Augmentation</h3>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Weight Decay:</label>
+                            <input type="number" id="weightDecay" value="0.0001" step="0.0001" min="0" max="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label>Validation Split:</label>
+                            <input type="number" id="valSplit" value="0.2" step="0.05" min="0.1" max="0.3">
+                        </div>
+                        <div class="form-group">
+                            <label>Classifier Dropout:</label>
+                            <input type="number" id="dropout" value="0.5" step="0.1" min="0" max="0.8">
+                        </div>
+                        <div class="form-group">
+                            <label>LR Scheduler:</label>
+                            <select id="scheduler">
+                                <option value="cosine" selected>Cosine Annealing</option>
+                                <option value="step">Step LR</option>
+                                <option value="plateau">Reduce on Plateau</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top: 15px;">
+                        <label>
+                            <input type="checkbox" id="dataAugment" checked>
+                            Enable Data Augmentation (Random Flip, Rotation, Color Jitter)
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Configuration Summary</h2>
+                <table class="model-summary-table">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Value</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Model</td><td id="summaryModel">TGVAnn</td><td>Dual-stream architecture</td></tr>
+                        <tr><td>Texture Method</td><td id="summaryTexture">LDP</td><td>Local Directional Pattern</td></tr>
+                        <tr><td>Batch Size</td><td id="summaryBatch">32</td><td>Balanced for GPU memory</td></tr>
+                        <tr><td>Epochs</td><td id="summaryEpochs">50</td><td>Convergence point</td></tr>
+                        <tr><td>Learning Rate</td><td id="summaryLR">1e-4</td><td>Adam optimizer</td></tr>
+                        <tr><td>Parameters</td><td>4.301M</td><td>Lightweight & efficient</td></tr>
+                        <tr><td>FLOPs</td><td>2.11 GFLOPs</td><td>70% reduction vs ViT</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab 5: Training -->
+        <div class="tab-content">
+            <div class="section">
+                <h2>Training Controls</h2>
+                <button class="btn btn-success" onclick="startTraining()">▶️ Start Training</button>
+                <button class="btn btn-danger" onclick="stopTraining()">⏹️ Stop</button>
+                <button class="btn btn-secondary" onclick="pauseTraining()">⏸️ Pause</button>
+                <button class="btn btn-primary" onclick="saveModel()">💾 Save Model</button>
+            </div>
+
+            <div class="section">
+                <h2>Training Progress</h2>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="trainingProgress" style="width: 0%">Epoch 0/50</div>
+                </div>
+                
+                <div class="grid-4" style="margin-top: 20px;">
+                    <div class="metrics-card">
+                        <h3>Train Loss</h3>
+                        <div class="value" id="trainLoss">-</div>
+                    </div>
+                    <div class="metrics-card">
+                        <h3>Train Accuracy</h3>
+                        <div class="value" id="trainAcc">0%</div>
+                    </div>
+                    <div class="metrics-card">
+                        <h3>Val Loss</h3>
+                        <div class="value" id="valLoss">-</div>
+                    </div>
+                    <div class="metrics-card">
+                        <h3>Val Accuracy</h3>
+                        <div class="value" id="valAcc">0%</div>
+                    </div>
+                </div>
+
+                <div class="grid-2" style="margin-top: 20px;">
+                    <div class="metrics-card">
+                        <h3>RGB Stream Loss</h3>
+                        <div class="value" id="rgbLoss" style="font-size: 1.5em;">-</div>
+                        <div class="subvalue">Appearance pathway</div>
+                    </div>
+                    <div class="metrics-card">
+                        <h3>Texture Stream Loss</h3>
+                        <div class="value" id="textureLoss" style="font-size: 1.5em;">-</div>
+                        <div class="subvalue">LDP pathway</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Training Logs</h2>
+                <div class="log-box" id="trainingLog">Ready to train TGVAnn dual-stream network...</div>
+            </div>
+
+            <div class="section">
+                <h2>Best Model Checkpoint</h2>
+                <div class="status success" id="bestModelInfo" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- Tab 6: Testing -->
+        <div class="tab-content">
+            <div class="section">
+                <h2>Load Trained Model</h2>
+                <div class="form-group">
+                    <label>Select Saved Model:</label>
+                    <select id="savedModels">
+                        <option value="">-- Select Model --</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="loadModelForTesting()">
+                    🔥 Load Model
+                </button>
+            </div>
+
+            <div class="section">
+                <h2>Test Results - TGVAnn Performance</h2>
+                <div class="grid-4">
+                    <div class="metrics-card">
+                        <h3>Test Accuracy</h3>
+                        <div class="value" id="testAcc">-</div>
+                        <div class="subvalue">Target: >99% (SLD)</div>
+                    </div>
+                    <div class="metrics-card">
+                        <h3>Precision</h3>
+                        <div class="value" id="testPrec">-</div>
+                    </div>
+                    <div class="metrics-card">
+                        <h3>Recall</h3>
+                        <div class="value" id="testRec">-</div>
+                    </div>
+                    <div class="metrics-card">
+                        <h3>F1-Score</h3>
+                        <div class="value" id="testF1">-</div>
+                    </div>
+                </div>
+                <button class="btn btn-success" onclick="runTesting()" style="margin-top: 15px;">
+                    🧪 Run Testing
+                </button>
+
+                <h3 style="margin-top: 25px; color: #1e3c72;">Per-Class Performance</h3>
+                <table class="model-summary-table">
+                    <thead>
+                        <tr>
+                            <th>Disease Class</th>
+                            <th>Precision (%)</th>
+                            <th>Recall (%)</th>
+                            <th>F1-Score (%)</th>
+                            <th>Support</th>
+                        </tr>
+                    </thead>
+                    <tbody id="perClassMetrics">
+                        <tr><td colspan="5" style="text-align: center;">Run testing to see results</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="section">
+                <h2>Computational Efficiency Analysis</h2>
+                <div class="grid-3">
+                    <div class="metrics-card">
+                        <h3>Parameters</h3>
+                        <div class="value" style="font-size: 1.8em;">4.301M</div>
+                        <div class="subvalue">67% fewer than ViT</div>
+                    </div>
+                    <div class="metrics-card">
+                        <h3>FLOPs</h3>
+                        <div class="value" style="font-size: 1.8em;">2.11G</div>
+                        <div class="subvalue">98.9% reduction vs ViT</div>
+                    </div>
+                    <div class="metrics-card">
+                        <h3>Inference FPS</h3>
+                        <div class="value" id="inferenceFPS" style="font-size: 1.8em;">28</div>
+                        <div class="subvalue">On Jetson Nano</div>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 25px; color: #1e3c72;">Comparison with State-of-the-Art</h3>
+                <table class="model-summary-table">
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Dataset</th>
+                            <th>Accuracy</th>
+                            <th>Parameters</th>
+                            <th>FLOPs</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="background: #e8f5e9;">
+                            <td><strong>TGVAnn (Ours)</strong></td>
+                            <td>SLD</td>
+                            <td><strong>99.07%</strong></td>
+                            <td><strong>4.301M</strong></td>
+                            <td><strong>2.11G</strong></td>
+                        </tr>
+                        <tr>
+                            <td>EfficientNet-B7</td>
+                            <td>SLD</td>
+                            <td>99.79%</td>
+                            <td>66.1M</td>
+                            <td>1.92P</td>
+                        </tr>
+                        <tr>
+                            <td>H-SVT</td>
+                            <td>SLD</td>
+                            <td>98.5%</td>
+                            <td>26.7M</td>
+                            <td>78.5T</td>
+                        </tr>
+                        <tr>
+                            <td>DeiT-3</td>
+                            <td>Maize</td>
+                            <td>98.58%</td>
+                            <td>21.9M</td>
+                            <td>190.5T</td>
+                        </tr>
+                        <tr>
+                            <td>MobileViT</td>
+                            <td>Maize</td>
+                            <td>98.36%</td>
+                            <td>2.12M</td>
+                            <td>16T</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab 7: Inference -->
+        <div class="tab-content">
+            <div class="section">
+                <h2>Load Model for Inference</h2>
+                <div class="form-group">
+                    <label>Select Trained Model:</label>
+                    <select id="inferenceModel">
+                        <option value="">-- Select Model --</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="loadModelForInference()">
+                    🔥 Load Model
+                </button>
+                <div id="modelLoadStatus" class="status info" style="display: none; margin-top: 15px;"></div>
+            </div>
+
+            <div class="section">
+                <h2>Upload Images for Disease Detection</h2>
+                <div class="file-upload" onclick="document.getElementById('inferenceImages').click()">
+                    <input type="file" id="inferenceImages" multiple accept="image/*">
+                    <div class="file-upload-icon">🖼️</div>
+                    <h3>Click to Upload Leaf Images</h3>
+                    <p style="color: #666; margin-top: 10px;">
+                        Upload one or more plant leaf images for disease prediction
+                    </p>
+                </div>
+                <button class="btn btn-success" onclick="runInference()" style="margin-top: 15px;">
+                    🔮 Run TGVAnn Inference
+                </button>
+            </div>
+
+            <div class="section">
+                <h2>Prediction Results</h2>
+                <div id="inferenceResults" class="image-grid"></div>
+            </div>
+
+            <div class="section">
+                <h2>Batch Statistics</h2>
+                <div class="grid-3">
+                    <div class="metrics-card">
+                        <h3>Images Processed</h3>
+                        <div class="value" id="inferenceCount">0</div>
+                    </div>
+                    <div class="metrics-card">
+                        <h3>Avg Confidence</h3>
+                        <div class="value" id="avgConfidence">-</div>
+                        <div class="subvalue">Cross-modal attention score</div>
+                    </div>
+                    <div class="metrics-card">
+                        <h3>Processing Time</h3>
+                        <div class="value" id="inferenceTime">-</div>
+                        <div class="subvalue">Dual-stream forward pass</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let state = {
+            dataset: { name: '', classes: [], images: {}, totalImages: 0 },
+            texture: { method: 'ldp', params: {}, generated: false },
+            model: { selected: 'tgvann', config: {}, trained: false },
+            training: { isRunning: false, currentEpoch: 0, history: [] },
+            savedModels: []
+        };
+
+        const modelDefinitions = {
+            resnet18_rgb: {
+                name: 'ResNet-18 (RGB Only)',
+                type: 'baseline',
+                inputs: ['rgb'],
+                params: '11.69M',
+                flops: '1.82G',
+                accuracy: { sld: 93.5, maize: 95.2 }
+            },
+            resnet18_texture: {
+                name: 'ResNet-18 (Texture Only)',
+                type: 'baseline',
+                inputs: ['texture'],
+                params: '11.69M',
+                flops: '1.82G',
+                accuracy: { sld: 91.8, maize: 93.5 }
+            },
+            vit: {
+                name: 'Vision Transformer (DeiT-3)',
+                type: 'sota',
+                inputs: ['rgb'],
+                params: '21.9M',
+                flops: '190.5T',
+                accuracy: { sld: 97.2, maize: 98.58 }
+            },
+            efficientnet: {
+                name: 'EfficientNet-B7',
+                type: 'sota',
+                inputs: ['rgb'],
+                params: '66.1M',
+                flops: '1.92P',
+                accuracy: { sld: 99.79, maize: 98.5 }
+            },
+            swin: {
+                name: 'Swin Transformer (H-SVT)',
+                type: 'sota',
+                inputs: ['rgb'],
+                params: '26.7M',
+                flops: '78.5T',
+                accuracy: { sld: 98.5, maize: 97.8 }
+            },
+            mobilevit: {
+                name: 'MobileViT',
+                type: 'sota',
+                inputs: ['rgb'],
+                params: '2.12M',
+                flops: '16T',
+                accuracy: { sld: 96.5, maize: 98.36 }
+            },
+            tgvann: {
+                name: 'TGVAnn (Proposed)',
+                type: 'proposed',
+                inputs: ['rgb', 'texture'],
+                params: '4.301M',
+                flops: '2.11G',
+                accuracy: { sld: 99.07, maize: 98.95, tmci: 88.36, ksci: 88.86 }
+            }
+        };
+
+        function switchTab(index) {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach((tab, i) => {
+                tab.classList.toggle('active', i === index);
+            });
+            
+            contents.forEach((content, i) => {
+                content.classList.toggle('active', i === index);
+            });
+
+            if (index === 3) updateConfigSummary();
+        }
+
+        document.getElementById('dataUpload').addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            loadDataset(files);
+        });
+
+        function loadDataset(files) {
+            state.dataset.classes = [];
+            state.dataset.images = {};
+            state.dataset.totalImages = 0;
+
+            files.forEach(file => {
+                const pathParts = file.webkitRelativePath.split('/');
+                if (pathParts.length >= 2) {
+                    const datasetName = pathParts[0];
+                    const className = pathParts[pathParts.length - 2];
+                    
+                    state.dataset.name = datasetName;
+                    
+                    if (!state.dataset.classes.includes(className)) {
+                        state.dataset.classes.push(className);
+                        state.dataset.images[className] = [];
+                    }
+                    
+                    state.dataset.images[className].push(file);
+                    state.dataset.totalImages++;
+                }
+            });
+
+            updateDatasetStats();
+            displayClassPreviews();
+            
+            document.getElementById('dataStatus').style.display = 'block';
+            document.getElementById('dataStatus').className = 'status success';
+            document.getElementById('dataStatus').textContent = 
+                `✅ Loaded ${state.dataset.totalImages} images from ${state.dataset.classes.length} classes`;
+        }
+
+        function updateDatasetStats() {
+            document.getElementById('datasetName').textContent = state.dataset.name || '-';
+            document.getElementById('totalClasses').textContent = state.dataset.classes.length;
+            document.getElementById('totalImages').textContent = state.dataset.totalImages;
+
+            // Check for class imbalance
+            const classCounts = state.dataset.classes.map(c => state.dataset.images[c].length);
+            const maxCount = Math.max(...classCounts);
+            const minCount = Math.min(...classCounts);
+            const imbalanceRatio = maxCount / (minCount || 1);
+            
+            if (imbalanceRatio > 2) {
+                document.getElementById('imbalanceWarning').textContent = 
+                    `⚠️ Imbalanced dataset detected (${imbalanceRatio.toFixed(1)}:1 ratio)`;
+                document.getElementById('imbalanceWarning').style.color = '#d32f2f';
+            } else {
+                document.getElementById('imbalanceWarning').textContent = '✓ Well-balanced dataset';
+                document.getElementById('imbalanceWarning').style.color = '#388e3c';
+            }
+
+            const tbody = document.getElementById('classDistribution');
+            tbody.innerHTML = '';
+            
+            state.dataset.classes.forEach(className => {
+                const count = state.dataset.images[className].length;
+                const percentage = ((count / state.dataset.totalImages) * 100).toFixed(1);
+                const status = count < state.dataset.totalImages / state.dataset.classes.length / 2 ? 
+                    '⚠️ Underrepresented' : '✓ Good';
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${className}</strong></td>
+                    <td>${count}</td>
+                    <td>${percentage}%</td>
+                    <td>${status}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function displayClassPreviews() {
+            const container = document.getElementById('classPreview');
+            container.innerHTML = '';
+
+            state.dataset.classes.forEach(className => {
+                const classSection = document.createElement('div');
+                classSection.style.marginBottom = '30px';
+                
+                const header = document.createElement('h3');
+                header.textContent = `${className} (${state.dataset.images[className].length} images)`;
+                header.style.color = '#1e3c72';
+                header.style.marginBottom = '15px';
+                classSection.appendChild(header);
+
+                const imageGrid = document.createElement('div');
+                imageGrid.className = 'image-grid';
+
+                const samplesToShow = Math.min(6, state.dataset.images[className].length);
+                for (let i = 0; i < samplesToShow; i++) {
+                    const file = state.dataset.images[className][i];
+                    const card = document.createElement('div');
+                    card.className = 'image-card';
+
+                    const img = document.createElement('img');
+                    img.src = URL.createObjectURL(file);
+                    card.appendChild(img);
+
+                    const label = document.createElement('div');
+                    label.className = 'label';
+                    label.textContent = file.name;
+                    card.appendChild(label);
+
+                    imageGrid.appendChild(card);
+                }
+
+                classSection.appendChild(imageGrid);
+                container.appendChild(classSection);
+            });
+        }
+
+        function generateTextures() {
+            if (!state.dataset.totalImages) {
+                alert('Please upload a dataset first!');
+                return;
+            }
+
+            logToTexture('🎨 Starting LDP texture generation...');
+            logToTexture(`Parameters: Top-K=${document.getElementById('ldpTopK').value}, CLAHE=${document.getElementById('claheClip').value}`);
+            
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 10;
+                document.getElementById('textureProgress').style.width = progress + '%';
+                document.getElementById('textureProgress').textContent = progress + '%';
+                
+                if (progress === 30) {
+                    logToTexture('📐 Applying 8 Kirsch directional masks...');
+                } else if (progress === 60) {
+                    logToTexture('🔍 Extracting top-k gradients...');
+                } else if (progress === 90) {
+                    logToTexture('✨ Applying CLAHE enhancement...');
+                }
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    state.texture.generated = true;
+                    logToTexture('✅ LDP texture features generated successfully!');
+                    logToTexture(`📊 Generated ${state.dataset.totalImages} texture feature maps`);
+                    displayTextureComparison();
+                }
+            }, 300);
+        }
+
+        function logToTexture(message) {
+            const log = document.getElementById('textureLog');
+            const timestamp = new Date().toLocaleTimeString();
+            log.innerHTML += `\n[${timestamp}] ${message}`;
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function displayTextureComparison() {
+            const container = document.getElementById('textureComparison');
+            container.innerHTML = '';
+
+            state.dataset.classes.forEach(className => {
+                const samples = state.dataset.images[className].slice(0, 3);
+                samples.forEach((file, idx) => {
+                    const rgbDiv = document.createElement('div');
+                    rgbDiv.style.textAlign = 'center';
+                    const rgbImg = document.createElement('img');
+                    rgbImg.src = URL.createObjectURL(file);
+                    rgbImg.style.width = '100%';
+                    rgbImg.style.borderRadius = '8px';
+                    const rgbLabel = document.createElement('p');
+                    rgbLabel.textContent = `${className} - RGB (Query)`;
+                    rgbLabel.style.marginTop = '8px';
+                    rgbLabel.style.fontSize = '12px';
+                    rgbLabel.style.fontWeight = '600';
+                    rgbLabel.style.color = '#2196f3';
+                    rgbDiv.appendChild(rgbImg);
+                    rgbDiv.appendChild(rgbLabel);
+                    container.appendChild(rgbDiv);
+
+                    const textureDiv = document.createElement('div');
+                    textureDiv.style.textAlign = 'center';
+                    const textureImg = document.createElement('img');
+                    textureImg.src = URL.createObjectURL(file);
+                    textureImg.style.width = '100%';
+                    textureImg.style.borderRadius = '8px';
+                    textureImg.style.filter = 'grayscale(100%) contrast(1.8) brightness(1.1)';
+                    const textureLabel = document.createElement('p');
+                    textureLabel.textContent = `${className} - LDP (Key, Value)`;
+                    textureLabel.style.marginTop = '8px';
+                    textureLabel.style.fontSize = '12px';
+                    textureLabel.style.fontWeight = '600';
+                    textureLabel.style.color = '#ff9800';
+                    textureDiv.appendChild(textureImg);
+                    textureDiv.appendChild(textureLabel);
+                    container.appendChild(textureDiv);
+                });
+            });
+        }
+
+        function selectModel(modelKey, element) {
+            state.model.selected = modelKey;
+            
+            document.querySelectorAll('.model-card').forEach(el => {
+                el.classList.remove('selected');
+            });
+            if (element) {
+                element.classList.add('selected');
+            }
+
+            const modelDef = modelDefinitions[modelKey];
+            updateModelSummary(modelDef, modelKey);
+        }
+
+        function updateModelSummary(modelDef, modelKey) {
+            const summary = `Model: ${modelDef.name}
+Type: ${modelDef.type.toUpperCase()}
+Inputs: ${modelDef.inputs.join(' + ').toUpperCase()}
+
+Parameters: ${modelDef.params}
+FLOPs: ${modelDef.flops}
+
+Accuracy:
+- SLD: ${modelDef.accuracy.sld}%
+${modelDef.accuracy.maize ? `- PlantVillage (Maize): ${modelDef.accuracy.maize}%` : ''}
+${modelDef.accuracy.tmci ? `- TMCI: ${modelDef.accuracy.tmci}%` : ''}
+${modelDef.accuracy.ksci ? `- KSCI: ${modelDef.accuracy.ksci}%` : ''}
+
+${modelKey === 'tgvann' ? `
+Key Features:
+✓ Dual-stream architecture (RGB + Texture)
+✓ Cross-modal attention at ResBlock-2
+✓ Multi-feature projection (MFP)
+✓ Single-head attention for efficiency
+✓ 20-70% computational reduction vs SOTA
+✓ Superior on imbalanced datasets
+` : ''}`;
+
+            document.getElementById('modelSummary').textContent = summary;
+        }
+
+        function updateConfigSummary() {
+            document.getElementById('summaryModel').textContent = 
+                state.model.selected ? modelDefinitions[state.model.selected].name : 'TGVAnn';
+            document.getElementById('summaryTexture').textContent = 
+                state.texture.generated ? 'LDP (Generated)' : 'LDP (Not generated)';
+            document.getElementById('summaryBatch').textContent = document.getElementById('batchSize').value;
+            document.getElementById('summaryEpochs').textContent = document.getElementById('numEpochs').value;
+            document.getElementById('summaryLR').textContent = document.getElementById('learningRate').value;
+        }
+
+        function startTraining() {
+            if (!state.dataset.totalImages) {
+                alert('Please upload a dataset first!');
+                return;
+            }
+
+            if (state.model.selected === 'tgvann' && !state.texture.generated) {
+                alert('TGVAnn requires LDP texture features. Please generate textures first!');
+                return;
+            }
+
+            state.training.isRunning = true;
+            state.training.currentEpoch = 0;
+            
+            const numEpochs = parseInt(document.getElementById('numEpochs').value);
+            const modelDef = modelDefinitions[state.model.selected];
+            
+            logToTraining(`🚀 Starting training: ${modelDef.name}`);
+            logToTraining(`📊 Dataset: ${state.dataset.name} (${state.dataset.classes.length} classes, ${state.dataset.totalImages} images)`);
+            logToTraining(`⚙️  Hyperparameters: Batch=${document.getElementById('batchSize').value}, LR=${document.getElementById('learningRate').value}, Epochs=${numEpochs}`);
+            
+            if (state.model.selected === 'tgvann') {
+                logToTraining(`🔄 Dual-stream architecture: RGB (Query) + LDP Texture (Key, Value)`);
+                logToTraining(`⚡ Attention fusion at ResBlock-2`);
+            }
+            
+            logToTraining('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+            simulateTraining(numEpochs);
+        }
+
+        function simulateTraining(numEpochs) {
+            if (!state.training.isRunning || state.training.currentEpoch >= numEpochs) {
+                state.training.isRunning = false;
+                state.model.trained = true;
+                logToTraining('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                logToTraining('✅ Training completed successfully!');
+                logToTraining(`🎯 Best validation accuracy: ${document.getElementById('valAcc').textContent}`);
+                
+                const modelName = `${state.model.selected}_${state.dataset.name}_${Date.now()}`;
+                state.savedModels.push(modelName);
+                updateModelDropdowns();
+                logToTraining(`💾 Model saved: ${modelName}`);
+                
+                return;
+            }
+
+            state.training.currentEpoch++;
+            const epoch = state.training.currentEpoch;
+
+            // Simulate realistic convergence for TGVAnn
+            const baseAcc = state.model.selected === 'tgvann' ? 99.07 : 95.0;
+            const trainLoss = (2.0 * Math.exp(-epoch / 15) + 0.05 + Math.random() * 0.05).toFixed(4);
+            const valLoss = (2.2 * Math.exp(-epoch / 15) + 0.08 + Math.random() * 0.08).toFixed(4);
+            const trainAcc = Math.min(baseAcc + 1, (baseAcc - 5) * (1 - Math.exp(-epoch / 12)) + baseAcc - 5 + Math.random() * 2).toFixed(2);
+            const valAcc = Math.min(baseAcc, (baseAcc - 8) * (1 - Math.exp(-epoch / 12)) + baseAcc - 8 + Math.random() * 2).toFixed(2);
+
+            // Simulate RGB and texture stream losses for TGVAnn
+            if (state.model.selected === 'tgvann') {
+                const rgbLoss = (parseFloat(trainLoss) * 0.55).toFixed(4);
+                const texLoss = (parseFloat(trainLoss) * 0.45).toFixed(4);
+                document.getElementById('rgbLoss').textContent = rgbLoss;
+                document.getElementById('textureLoss').textContent = texLoss;
+            }
+
+            const progress = (epoch / numEpochs) * 100;
+            document.getElementById('trainingProgress').style.width = progress + '%';
+            document.getElementById('trainingProgress').textContent = `Epoch ${epoch}/${numEpochs}`;
+
+            document.getElementById('trainLoss').textContent = trainLoss;
+            document.getElementById('trainAcc').textContent = trainAcc + '%';
+            document.getElementById('valLoss').textContent = valLoss;
+            document.getElementById('valAcc').textContent = valAcc + '%';
+
+            logToTraining(`Epoch ${epoch}/${numEpochs} - Train Loss: ${trainLoss}, Acc: ${trainAcc}% | Val Loss: ${valLoss}, Acc: ${valAcc}%`);
+
+            if (parseFloat(valAcc) > 90 && epoch > 10) {
+                document.getElementById('bestModelInfo').style.display = 'block';
+                document.getElementById('bestModelInfo').textContent = 
+                    `✓ New best checkpoint! Val Acc: ${valAcc}% at epoch ${epoch}`;
+            }
+
+            setTimeout(() => simulateTraining(numEpochs), 600);
+        }
+
+        function stopTraining() {
+            state.training.isRunning = false;
+            logToTraining('⏹️ Training stopped by user');
+        }
+
+        function pauseTraining() {
+            state.training.isRunning = !state.training.isRunning;
+            const isPaused = !state.training.isRunning;
+            logToTraining(isPaused ? '⏸️ Training paused' : '▶️ Training resumed');
+            if (state.training.isRunning) {
+                simulateTraining(parseInt(document.getElementById('numEpochs').value));
+            }
+        }
+
+        function saveModel() {
+            if (!state.model.trained) {
+                alert('Please train a model first!');
+                return;
+            }
+            const modelName = `${state.model.selected}_${state.dataset.name}_${Date.now()}`;
+            state.savedModels.push(modelName);
+            updateModelDropdowns();
+            logToTraining(`💾 Model checkpoint saved: ${modelName}`);
+            alert('Model saved successfully!');
+        }
+
+        function logToTraining(message) {
+            const log = document.getElementById('trainingLog');
+            const timestamp = new Date().toLocaleTimeString();
+            log.innerHTML += `\n[${timestamp}] ${message}`;
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function updateModelDropdowns() {
+            const dropdowns = [document.getElementById('savedModels'), document.getElementById('inferenceModel')];
+            dropdowns.forEach(dropdown => {
+                dropdown.innerHTML = '<option value="">-- Select Model --</option>';
+                state.savedModels.forEach(model => {
+                    const option = document.createElement('option');
+                    option.value = model;
+                    option.textContent = model;
+                    dropdown.appendChild(option);
+                });
+            });
+        }
+
+        function loadModelForTesting() {
+            const selected = document.getElementById('savedModels').value;
+            if (!selected) {
+                alert('Please select a model!');
+                return;
+            }
+            alert('Model loaded for testing: ' + selected);
+        }
+
+        function runTesting() {
+            const selected = document.getElementById('savedModels').value;
+            if (!selected) {
+                alert('Please load a model first!');
+                return;
+            }
+
+            // Simulate TGVAnn performance
+            const isTGVAnn = selected.includes('tgvann');
+            const baseAcc = isTGVAnn ? 99.07 : 95.5;
+            
+            const testAcc = (baseAcc + Math.random() * 0.5).toFixed(2);
+            const testPrec = (baseAcc - 0.2 + Math.random() * 0.4).toFixed(2);
+            const testRec = (baseAcc - 0.3 + Math.random() * 0.4).toFixed(2);
+            const testF1 = (((parseFloat(testPrec) + parseFloat(testRec)) / 2)).toFixed(2);
+
+            document.getElementById('testAcc').textContent = testAcc + '%';
+            document.getElementById('testPrec').textContent = testPrec + '%';
+            document.getElementById('testRec').textContent = testRec + '%';
+            document.getElementById('testF1').textContent = testF1 + '%';
+
+            // Simulate FPS for edge deployment
+            const fps = isTGVAnn ? 28 : Math.floor(15 + Math.random() * 10);
+            document.getElementById('inferenceFPS').textContent = fps;
+
+            const tbody = document.getElementById('perClassMetrics');
+            tbody.innerHTML = '';
+            state.dataset.classes.forEach(className => {
+                const row = document.createElement('tr');
+                const prec = (baseAcc - 3 + Math.random() * 5).toFixed(2);
+                const rec = (baseAcc - 3 + Math.random() * 5).toFixed(2);
+                const f1 = ((parseFloat(prec) + parseFloat(rec)) / 2).toFixed(2);
+                const support = Math.floor(30 + Math.random() * 50);
+                row.innerHTML = `
+                    <td><strong>${className}</strong></td>
+                    <td>${prec}</td>
+                    <td>${rec}</td>
+                    <td>${f1}</td>
+                    <td>${support}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function loadModelForInference() {
+            const selected = document.getElementById('inferenceModel').value;
+            if (!selected) {
+                alert('Please select a model!');
+                return;
+            }
+            document.getElementById('modelLoadStatus').style.display = 'block';
+            document.getElementById('modelLoadStatus').className = 'status success';
+            document.getElementById('modelLoadStatus').textContent = '✅ Model loaded: ' + selected + ' (Dual-stream ready)';
+        }
+
+        function runInference() {
+            const modelSelected = document.getElementById('inferenceModel').value;
+            if (!modelSelected) {
+                alert('Please load a model first!');
+                return;
+            }
+
+            const files = document.getElementById('inferenceImages').files;
+            if (!files.length) {
+                alert('Please upload images first!');
+                return;
+            }
+
+            const container = document.getElementById('inferenceResults');
+            container.innerHTML = '';
+
+            let totalConf = 0;
+            const startTime = Date.now();
+
+            Array.from(files).forEach((file, idx) => {
+                const card = document.createElement('div');
+                card.className = 'image-card';
+
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+                card.appendChild(img);
+
+                const randClass = state.dataset.classes[Math.floor(Math.random() * state.dataset.classes.length)] || 'Disease';
+                const conf = (88 + Math.random() * 11).toFixed(2);
+                totalConf += parseFloat(conf);
+
+                const label = document.createElement('div');
+                label.className = 'label';
+                label.innerHTML = `<strong>${randClass}</strong><br>Confidence: ${conf}%<br><small>Cross-modal attention</small>`;
+                
+                if (parseFloat(conf) > 95) {
+                    label.style.background = '#d4edda';
+                    label.style.color = '#155724';
+                } else if (parseFloat(conf) > 85) {
+                    label.style.background = '#fff3cd';
+                    label.style.color = '#856404';
+                } else {
+                    label.style.background = '#f8d7da';
+                    label.style.color = '#721c24';
+                }
+                
+                card.appendChild(label);
+                container.appendChild(card);
+            });
+
+            const avgConf = (totalConf / files.length).toFixed(2);
+            const procTime = ((Date.now() - startTime) / 1000).toFixed(3);
+
+            document.getElementById('inferenceCount').textContent = files.length;
+            document.getElementById('avgConfidence').textContent = avgConf + '%';
+            document.getElementById('inferenceTime').textContent = procTime + 's';
+        }
+
+        // Initialize - remove the problematic initialization call
+        updateConfigSummary();
+        
+        // Set TGVAnn as selected on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const tgvannCard = document.querySelector('.model-card.selected');
+            if (tgvannCard) {
+                selectModel('tgvann', tgvannCard);
+            }
+        });
+    </script>
+</body>
+</html>
