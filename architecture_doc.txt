@@ -1,0 +1,338 @@
+# TGVAnn Architecture Documentation
+
+## Overview
+
+TGVAnn (Texture-Guided Visual Attention Network) is a dual-stream deep learning architecture designed for crop leaf disease detection. It combines RGB and texture features through a novel cross-modal attention mechanism called TGVA (Texture-Guided Visual Attention).
+
+## Architecture Components
+
+### 1. Input Stage
+
+**RGB Stream Input**: 256×256×3
+- Normalized with ImageNet statistics
+- Mean: [0.485, 0.456, 0.406]
+- Std: [0.229, 0.224, 0.225]
+
+**Texture Stream Input**: 256×256×1
+- LDP (Local Directional Pattern) texture features
+- Grayscale single-channel
+- Normalized with mean=0.5, std=0.5
+
+### 2. Initial Convolutional Layers
+
+Both streams use identical initial processing:
+
+```
+Conv1: 7×7, filters=64, stride=2, padding=3
+BatchNorm2d(64)
+ReLU
+MaxPool: 3×3, stride=2, padding=1
+
+Output: 64×64×64
+```
+
+### 3. ResBlock Architecture
+
+#### ResBlock-1 (64×64×64)
+- 2 Basic Blocks
+- Each block: {3×3, f=64, s=1} × 2
+- Residual connections
+- Output: 64×64×64
+
+#### ResBlock-2 (32×32×128) - Pre-TGVA
+- 2 Basic Blocks
+- First block: {3×3, f=128, s=2; 3×3, f=128, s=1}
+- Second block: {3×3, f=128, s=1; 3×3, f=128, s=1}
+- Downsample: 1×1 conv for stride=2 blocks
+- **This is where TGVA fusion occurs**
+- Output: 32×32×128 (both streams)
+
+### 4. TGVA Attention Module
+
+The core innovation of TGVAnn - performs cross-modal attention between RGB and texture features.
+
+#### Configuration
+```python
+d_model = 128          # Feature dimension
+h = 1                  # Single-head attention
+d_h = 128              # Head dimension (d_model / h)
+N = 1024               # Number of tokens (32×32)
+d_ff = 512             # FFN hidden dimension
+```
+
+#### Layer Sequence
+
+**Step 1: Spatial to Sequence Conversion**
+```
+RGB: [B, 128, 32, 32] → [B, 1024, 128]
+Texture: [B, 128, 32, 32] → [B, 1024, 128]
+```
+
+**Step 2: Pre-MHA Layer Normalization**
+```python
+LayerNorm(eps=1e-5)
+RGB_norm = LN(RGB)
+Texture_norm = LN(Texture)
+```
+
+**Step 3: Projection to Q, K, V**
+```python
+Q = Linear(128, 128, bias=True)(RGB_norm)      # Query from RGB
+K = Linear(128, 128, bias=True)(Texture_norm)  # Key from Texture
+V = Linear(128, 128, bias=True)(Texture_norm)  # Value from Texture
+```
+
+**Step 4: Scaled Dot-Product Attention**
+```python
+attention_scores = (Q @ K.T) / sqrt(128)  # [B, 1024, 1024]
+attention_weights = softmax(attention_scores)
+attention_weights = Dropout(p=0.10)(attention_weights)
+context = attention_weights @ V  # [B, 1024, 128]
+```
+
+**Step 5: Output Projection**
+```python
+context = Linear(128, 128, bias=True)(context)
+```
+
+**Step 6: Residual Connection + FFN**
+```python
+attended = RGB + context
+attended = attended + FFN(attended)
+
+# FFN structure:
+FFN = Sequential(
+    Linear(128, 512),
+    GELU(),
+    Dropout(p=0.10),
+    Linear(512, 128),
+    Dropout(p=0.10)
+)
+```
+
+**Step 7: Post-Add Layer Normalization**
+```python
+attended = LayerNorm(eps=1e-5)(attended)
+```
+
+**Step 8: Gated Add-Fusion**
+```python
+concatenated = concat([RGB, attended], dim=-1)  # [B, 1024, 256]
+gate = sigmoid(Linear(256, 128)(concatenated))
+fused = γ * (gate * attended) + (1 - gate) * RGB
+output = concat([fused, attended], dim=-1)  # [B, 1024, 256]
+```
+
+**Step 9: Sequence to Spatial Conversion**
+```
+[B, 1024, 256] → [B, 256, 32, 32]
+```
+
+**Step 10: Spatial Refinement**
+```python
+output = Conv2d(256, 256, kernel_size=1)(output)
+```
+
+**Final Output**: 32×32×256 (doubled channels from fusion)
+
+### 5. Post-Fusion ResBlocks
+
+#### ResBlock-3 (16×16×256)
+- Input: 32×32×256 (fused features)
+- 2 Basic Blocks
+- First block: {3×3, f=256, s=2; 3×3, f=256, s=1}
+- Second block: {3×3, f=256, s=1; 3×3, f=256, s=1}
+- Output: 16×16×256
+
+#### ResBlock-4 (8×8×512)
+- Input: 16×16×256
+- 2 Basic Blocks
+- First block: {3×3, f=512, s=2; 3×3, f=512, s=1}
+- Second block: {3×3, f=512, s=1; 3×3, f=512, s=1}
+- Output: 8×8×512
+
+### 6. Classification Head
+
+```python
+# Global Average Pooling
+x = AdaptiveAvgPool2d((1, 1))(x)  # [B, 512, 1, 1]
+x = Flatten(x)                     # [B, 512]
+
+# Fully Connected Layer
+x = Linear(512, 512)(x)
+x = ReLU()(x)
+x = Dropout(0.5)(x)
+
+# Classifier
+output = Linear(512, num_classes)(x)  # [B, num_classes]
+```
+
+## Complete Forward Pass Summary
+
+```
+Input RGB: [B, 3, 256, 256]
+Input Texture: [B, 1, 256, 256]
+         ↓
+Conv1 + MaxPool (both streams)
+         ↓
+[B, 64, 64, 64] (both streams)
+         ↓
+ResBlock-1
+         ↓
+[B, 64, 64, 64] (both streams)
+         ↓
+ResBlock-2
+         ↓
+[B, 128, 32, 32] (both streams)
+         ↓
+TGVA Attention Fusion
+         ↓
+[B, 256, 32, 32] (fused)
+         ↓
+ResBlock-3
+         ↓
+[B, 256, 16, 16]
+         ↓
+ResBlock-4
+         ↓
+[B, 512, 8, 8]
+         ↓
+Global Average Pooling
+         ↓
+[B, 512]
+         ↓
+FC + Dropout
+         ↓
+[B, 512]
+         ↓
+Classifier
+         ↓
+Output: [B, num_classes]
+```
+
+## Key Design Decisions
+
+### Why Single-Head Attention?
+- Simpler architecture with fewer parameters
+- Sufficient capacity for 128-dimensional features
+- Faster computation compared to multi-head
+- Empirically effective for texture-RGB fusion
+
+### Why Gated Fusion?
+- Learnable gate controls fusion strength
+- Adaptive per-sample fusion
+- Prevents catastrophic forgetting of RGB features
+- Learnable γ parameter provides global scaling
+
+### Why Layer Normalization?
+- Stabilizes training
+- Pre-LN before attention for better gradient flow
+- Post-LN after residual for feature normalization
+
+### Why ResBlock-2 for Fusion?
+- 32×32 resolution provides good balance
+- 1024 tokens manageable for attention
+- Rich enough features after ResBlock-2
+- Not too deep to lose low-level texture info
+
+## Computational Complexity
+
+### TGVA Attention Module
+
+**Attention Computation**:
+- Q@K^T: O(N² × d) = O(1024² × 128) ≈ 134M ops
+- Softmax: O(N²) = O(1024²) ≈ 1M ops
+- Attention@V: O(N² × d) = O(1024² × 128) ≈ 134M ops
+- **Total Attention**: ~268M FLOPs per sample
+
+**FFN Computation**:
+- Linear(128→512): O(N × d × d_ff) = O(1024 × 128 × 512) ≈ 67M ops
+- Linear(512→128): O(N × d_ff × d) = O(1024 × 512 × 128) ≈ 67M ops
+- **Total FFN**: ~134M FLOPs per sample
+
+**Total TGVA**: ~400M FLOPs per sample
+
+### Full Model Complexity
+
+| Component | Parameters | FLOPs (256×256 input) |
+|-----------|------------|----------------------|
+| Conv1 (both streams) | ~18K | ~450M |
+| ResBlock-1 (both) | ~147K | ~2.4G |
+| ResBlock-2 (both) | ~525K | ~2.7G |
+| TGVA Module | ~330K | ~400M |
+| ResBlock-3 | ~1.18M | ~1.2G |
+| ResBlock-4 | ~4.72M | ~1.2G |
+| FC + Classifier | ~262K | ~0.5M |
+| **Total** | **~7.2M** | **~8.4 GFLOPs** |
+
+*Note: Actual values may vary slightly based on implementation details*
+
+## LDP Texture Feature Extraction
+
+### Kirsch Gradient Filters (8 directions)
+
+```python
+kernels = [
+    [[5, 5, 5], [-3, 0, -3], [-3, -3, -3]],    # North
+    [[-3, 5, 5], [-3, 0, 5], [-3, -3, -3]],    # Northeast
+    [[-3, -3, 5], [-3, 0, 5], [-3, -3, 5]],    # East
+    [[-3, -3, -3], [-3, 0, 5], [-3, 5, 5]],    # Southeast
+    [[-3, -3, -3], [-3, 0, -3], [5, 5, 5]],    # South
+    [[-3, -3, -3], [5, 0, -3], [5, 5, -3]],    # Southwest
+    [[5, -3, -3], [5, 0, -3], [5, -3, -3]],    # West
+    [[5, 5, -3], [5, 0, -3], [-3, -3, -3]]     # Northwest
+]
+```
+
+### LDP Computation
+1. Apply 8 Kirsch filters to grayscale image
+2. Select top-k (k=3) strongest gradient directions per pixel
+3. Encode as binary pattern
+4. Apply CLAHE enhancement (clipLimit=2.0, tileSize=8×8)
+
+## Training Considerations
+
+### Initialization
+- Conv layers: Kaiming Normal (fan_out, relu)
+- BatchNorm: weight=1, bias=0
+- Linear: Normal(0, 0.01)
+
+### Regularization
+- Dropout: 0.5 in classification head
+- Attention dropout: 0.10
+- FFN dropout: 0.10
+- Weight decay: 1e-4
+
+### Data Augmentation
+- Random horizontal flip (p=0.5)
+- Random vertical flip (p=0.5)
+- Random rotation (±15°)
+- Color jitter (brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1)
+
+### Optimization
+- Adam optimizer
+- Initial LR: 1e-4
+- Cosine annealing scheduler
+- Batch size: 32 (adjustable based on GPU memory)
+
+## Grad-CAM Visualization
+
+### Target Layers for Visualization
+1. **ResBlock-2** (before TGVA): Shows low-level features
+2. **Layer3** (after TGVA): Shows attention-enhanced features
+3. **Layer4**: Shows high-level semantic features
+
+### Grad-CAM Computation
+```python
+1. Forward pass through model
+2. Get activations from target layer
+3. Backward pass with one-hot target class
+4. Compute gradients w.r.t. activations
+5. Global average pooling on gradients → weights
+6. Weighted sum of activations
+7. ReLU + Normalize → Heatmap
+```
+
+---
+
+For implementation details, see the code in `models/tgvann.py` and `models/tgva_attention.py`.
